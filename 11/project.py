@@ -20,7 +20,7 @@ class State(object):
         output = []
         for floor in self.floors:
             output.append(sorted(floor))
-        return str(output), 4
+        return str(output) + ":elevator=" + str(self.elevator)
 
     def clone(self):
         other = State(0)
@@ -59,7 +59,7 @@ class State(object):
             for pair in itertools.combinations(self.current_floor, num_objects):
                 for direction in directions:
                     yield direction, pair
-                num_objects -= 1
+            num_objects -= 1
 
     def move(self, direction, pair):
         if pair:
@@ -146,10 +146,13 @@ class Project(object):
 
         # print(root)
 
-        print(find_nearest_correct(root))
+        result = find_nearest_correct(root)
+        print(result)
+        print(result.distance)
+
 
     def run1(self):
-        p = State(4)
+        p = State(4, distance=0)
         p.add(RTG("strontium"), 1)
         p.add(Chip("strontium"), 1)
         p.add(RTG("plutonium"), 1)
@@ -161,8 +164,47 @@ class Project(object):
         p.add(Chip("curium"), 2)
         p.add(Chip("thulium"), 3)
 
-        print find_depth(p, max_depth=40)
+        result = find_nearest_correct(p)
+        print(result)
+        print(result.distance)
 
+    def run1(self):
+        p = State(4, distance=0)
+        p.add(RTG("strontium"), 1)
+        p.add(Chip("strontium"), 1)
+        p.add(RTG("plutonium"), 1)
+        p.add(Chip("plutonium"), 1)
+        p.add(RTG("thulium"), 2)
+        p.add(RTG("ruthenium"), 2)
+        p.add(Chip("ruthenium"), 2)
+        p.add(RTG("curium"), 2)
+        p.add(Chip("curium"), 2)
+        p.add(Chip("thulium"), 3)
+
+        result = find_nearest_correct(p)
+        print(result)
+        print(result.distance)
+
+    def run2(self):
+        p = State(4, distance=0)
+        p.add(RTG("strontium"), 1)
+        p.add(Chip("strontium"), 1)
+        p.add(RTG("plutonium"), 1)
+        p.add(Chip("plutonium"), 1)
+        p.add(Chip("elerium"), 1)
+        p.add(RTG("elerium"), 1)
+        p.add(Chip("dilithium"), 1)
+        p.add(RTG("dilithium"), 1)
+        p.add(RTG("thulium"), 2)
+        p.add(RTG("ruthenium"), 2)
+        p.add(Chip("ruthenium"), 2)
+        p.add(RTG("curium"), 2)
+        p.add(Chip("curium"), 2)
+        p.add(Chip("thulium"), 3)
+
+        result = find_nearest_correct(p)
+        print(result)
+        print(result.distance)
 
 def any_rtg(iterable):
     return _any(iterable, lambda x: x.type == 'rtg')
@@ -182,64 +224,43 @@ def find_nearest_correct(root, max_distance=1000):
     seen = {}
     queue.put(root)
 
+    last_distance = 0
     while not queue.empty():
         state = queue.get()
-        print("*A*A*A*A*A*AA*A*A*A*A*A*A*A*")
-        print("Parent: ", state.distance)
-        print(state)
-        print(list(state.itermoves()))
-        raw_input()
+        if state.distance > last_distance:
+            last_distance = state.distance
+            print(last_distance)
+        sys.stdout.flush()
         if state.distance > max_distance:
             return False
-        if state.serialize() in seen:
-            print("skipping, already seen")
-            continue
 
-        seen[state.serialize()] = state
         if state.is_complete():
             # All objects are on the final floor
             print("Looks right to me vov")
             return state
 
         if state.is_valid():
-            print("VALID. MOVVOOVOVOVOVOOOOOOVES: ::")
             # print("It's valid at least.")
             for move in state.itermoves():
-                print(move)
                 new_state = state.clone()
                 new_state.move(*move)
                 new_state.parent = state
                 new_state.distance = state.distance + 1
-                print(new_state)
+
                 if new_state.is_valid():
-                    queue.put(new_state)
+                    if new_state.serialize() in seen:
+                        pass
+                    else:
+                        seen[new_state.serialize()] = new_state
+                        queue.put(new_state)
                 else:
-                    print("INVALID")
-                raw_input()
+                    pass
+                    # print("INVALID")
+
         else:
-            print("it's not valid :()")
-
-
-
-def find_depth(state, depth=0, max_depth=1,):
-    print(depth, max_depth)
-    if depth >= max_depth:
-        return False
-    for move in state.itermoves():
-        temp_state = state.clone()
-        temp_state.move(*move)
-        if temp_state.is_complete():
-            return depth
-        elif temp_state.is_valid():
-            tmp_depth = find_depth(temp_state,
-                                   depth=depth,
-                                   max_depth=max_depth - 1)
-            if tmp_depth:
-                return tmp_depth + 1
-    return False
-
-
+            pass
+            # print("it's not valid :()")
 
 
 if __name__ == '__main__':
-    Project().run_test()
+    Project().run2()
