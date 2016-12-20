@@ -1,17 +1,26 @@
 import sys
 import itertools
+from Queue import Queue
 
 class RTGFry(Exception):
     pass
 
 class State(object):
-    def __init__(self, num_floors=2):
+    def __init__(self, num_floors=2, distance=None, parent=None):
         self.floors = [set() for _ in range(num_floors)]
         self.elevator = 1
+        self.distance = distance  # distance from root
+        self.parent = parent  # None makes this the root
 
     @property
     def current_floor(self):
         return self.floors[self.elevator - 1]
+
+    def serialize(self):
+        output = []
+        for floor in self.floors:
+            output.append(sorted(floor))
+        return str(output), 4
 
     def clone(self):
         other = State(0)
@@ -20,24 +29,37 @@ class State(object):
             other.floors.append(set(floor))
         return other
 
-    def add(self, item, floor):
-        self.floors[floor-1].add(item)
+    def add(self, item, floor=None):
+        if floor is None:
+            add_to = self.current_floor
+        else:
+            add_to = self.floors[floor-1]
+        add_to.add(item)
+
+    @property
+    def lowest_populated_floor(self):
+        for i, floor in enumerate(self.floors):
+            if len(floor) != 0:
+                return i + 1
 
     def itermoves(self):
-        if self.elevator == 1:
+        if self.elevator == self.lowest_populated_floor:
             directions = ['up']
         elif self.elevator == len(self.floors):
             directions = ['down']
         else:
             directions = ['up', 'down']
 
-        if len(self.current_floor) < 2:
-            for direction in directions:
-                yield direction, pair
+        num_objects = 2
 
-        for pair in itertools.combinations(self.current_floor, 2):
-            for direction in directions:
-                yield direction, pair
+        if len(self.current_floor) < num_objects:
+            num_objects = len(self.current_floor)
+
+        while num_objects > 0:
+            for pair in itertools.combinations(self.current_floor, num_objects):
+                for direction in directions:
+                    yield direction, pair
+                num_objects -= 1
 
     def move(self, direction, pair):
         if pair:
@@ -51,9 +73,9 @@ class State(object):
             self.elevator -= 1
 
         if pair:
-            self.current_floor.add(pair[0])
+            self.add(pair[0])
         if len(pair) == 2:
-            self.current_floor.add(pair[1])
+            self.add(pair[1])
 
 
     def is_complete(self, ):
@@ -65,7 +87,6 @@ class State(object):
     def is_valid(self, ):
         for floor in self.floors:
             if not any_rtg(floor):
-                print("skipping - no generator")
                 continue
             for item in floor:
                 if item.type == 'chip' and \
@@ -73,6 +94,17 @@ class State(object):
                     return False
         return True
 
+    def __str__(self):
+        output = []
+        for i, floor in enumerate(self.floors):
+            if self.elevator == i+1:
+                marker = "*"
+            else:
+                marker = " "
+
+            output.append("%s#%d: floor: %s\n" % (marker, i+1, sorted(floor)))
+
+        return "".join(reversed(output))
 
 class Item(object):
     def __init__(self, element):
@@ -80,7 +112,12 @@ class Item(object):
         self.type = None
 
     def __repr__(self):
-        return '<%s: %s>' % (self.type, self.element)
+        # return '<%s: %s>' % (self.type, self.element)
+        if self.type == 'rtg':
+            short_type = 'G'
+        else:
+            short_type = 'M'
+        return '%s%s' % (self.element, short_type)
 
 class Chip(Item):
     def __init__(self, element):
@@ -96,9 +133,35 @@ class Project(object):
     def __init__(self, ):
         pass
 
-    def run(self, ):
-        for line in sys.stdin:
-            pass
+    def run_test(self, ):
+        root = State(4, distance=0)
+        lg = RTG("L")
+        lm = Chip("L")
+        hg = RTG("H")
+        hm = Chip("H")
+        root.add(lm, 1)
+        root.add(hm, 1)
+        root.add(hg, 2)
+        root.add(lg, 3)
+
+        # print(root)
+
+        print(find_nearest_correct(root))
+
+    def run1(self):
+        p = State(4)
+        p.add(RTG("strontium"), 1)
+        p.add(Chip("strontium"), 1)
+        p.add(RTG("plutonium"), 1)
+        p.add(Chip("plutonium"), 1)
+        p.add(RTG("thulium"), 2)
+        p.add(RTG("ruthenium"), 2)
+        p.add(Chip("ruthenium"), 2)
+        p.add(RTG("curium"), 2)
+        p.add(Chip("curium"), 2)
+        p.add(Chip("thulium"), 3)
+
+        print find_depth(p, max_depth=40)
 
 
 def any_rtg(iterable):
@@ -114,8 +177,51 @@ def _any(iterable, func):
     return False
 
 
+def find_nearest_correct(root, max_distance=1000):
+    queue = Queue()
+    seen = {}
+    queue.put(root)
 
-def find_depth(state, depth=0, max_depth=1):
+    while not queue.empty():
+        state = queue.get()
+        print("*A*A*A*A*A*AA*A*A*A*A*A*A*A*")
+        print("Parent: ", state.distance)
+        print(state)
+        print(list(state.itermoves()))
+        raw_input()
+        if state.distance > max_distance:
+            return False
+        if state.serialize() in seen:
+            print("skipping, already seen")
+            continue
+
+        seen[state.serialize()] = state
+        if state.is_complete():
+            # All objects are on the final floor
+            print("Looks right to me vov")
+            return state
+
+        if state.is_valid():
+            print("VALID. MOVVOOVOVOVOVOOOOOOVES: ::")
+            # print("It's valid at least.")
+            for move in state.itermoves():
+                print(move)
+                new_state = state.clone()
+                new_state.move(*move)
+                new_state.parent = state
+                new_state.distance = state.distance + 1
+                print(new_state)
+                if new_state.is_valid():
+                    queue.put(new_state)
+                else:
+                    print("INVALID")
+                raw_input()
+        else:
+            print("it's not valid :()")
+
+
+
+def find_depth(state, depth=0, max_depth=1,):
     print(depth, max_depth)
     if depth >= max_depth:
         return False
@@ -126,32 +232,14 @@ def find_depth(state, depth=0, max_depth=1):
             return depth
         elif temp_state.is_valid():
             tmp_depth = find_depth(temp_state,
-                               depth=depth,
-                               max_depth=max_depth - 1)
+                                   depth=depth,
+                                   max_depth=max_depth - 1)
             if tmp_depth:
                 return tmp_depth + 1
     return False
 
 
+
+
 if __name__ == '__main__':
-    p = State(4)
-    # p.add(RTG("strontium"), 1)
-    # p.add(Chip("strontium"), 1)
-    # p.elevator = 1
-
-    p.add(RTG("strontium"), 1)
-    p.add(Chip("strontium"), 1)
-    p.add(RTG("plutonium"), 1)
-    p.add(Chip("plutonium"), 1)
-    p.add(RTG("thulium"), 2)
-    p.add(RTG("ruthenium"), 2)
-    p.add(Chip("ruthenium"), 2)
-    p.add(RTG("curium"), 2)
-    p.add(Chip("curium"), 2)
-    p.add(Chip("thulium"), 3)
-
-    print find_depth(p, max_depth=8)
-
-    # for move in p.itermoves():
-    #     print move
-    # print p.is_valid()
+    Project().run_test()
