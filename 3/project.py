@@ -1,22 +1,21 @@
 import sys
 
+
 class Project(object):
-    def __init__(self, ):
-        pass
+    def __init__(self, fh):
+        self.input = fh
 
     def run1(self, ):
         total = 0
         valid = 0
 
-        for line in sys.stdin:
+        for line in self.input:
             triangle = self.get_triangle(line.split())
             total += 1
 
             if self.check(triangle):
                 valid += 1
-                print triangle, True
-            else:
-                print triangle, False
+        return valid
 
         print("Total: %s\nValid: %s" % (total, valid))
 
@@ -27,12 +26,8 @@ class Project(object):
             total += 1
             if self.check(triangle):
                 valid += 1
-                print(triangle, True)
-            else:
-                print(triangle, False)
 
-        print("Total: %s\nValid: %s" % (total, valid))
-
+        return valid
 
     def check(self, triangle):
         return triangle[0] + triangle[1] > triangle[2]
@@ -46,9 +41,9 @@ class Project(object):
     def triangles(self):
         while True:
             try:
-                line1 = sys.stdin.next().split()
-                line2 = sys.stdin.next().split()
-                line3 = sys.stdin.next().split()
+                line1 = self.input.next().split()
+                line2 = self.input.next().split()
+                line3 = self.input.next().split()
 
                 for i in [0, 1, 2]:
                     yield self.get_triangle([line1[i], line2[i], line3[i]])
@@ -56,7 +51,10 @@ class Project(object):
                 break
 
 
-
-
 if __name__ == '__main__':
-    Project().run2()
+    with open('input.txt', 'r') as f:
+        p = Project(f)
+        print "Part 1:", p.run1()
+        f.seek(0)
+        print "Part 2", p.run2()
+        f.close()

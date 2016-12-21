@@ -1,5 +1,6 @@
 import sys
 
+
 class Machine(object):
     def __init__(self, verbose):
         self.verbose = verbose
@@ -65,37 +66,42 @@ class Machine(object):
             return self._process_cmd(cmd)
 
 
-    def lol(self, herp, derp):
-        print(self)
-        print(herp)
-        print(derp)
-
-
 class Project(object):
-    def __init__(self, ):
-        pass
+    def __init__(self, fh):
+        self.input = fh
 
-    def run(self, ):
+    def run1(self):
         machine = Machine(verbose=False)
-        for line in sys.stdin:
+        for line in self.input:
             machine.instructions.append(line.strip())
-        # print machine.process_current()
-        # print machine.process_current()
-        i = 0
-        while i < 10000000000:
-            i += 1
-            if i % 1000 == 0:
-                pass
-                print("REGISTERS: %s" % machine.registers)
+
+        while True:
             try:
                 machine.process_current()
             except StopIteration:
                 break
-        print machine.instructions
-        print machine.registers
 
+        return machine.registers['a']
 
+    def run2(self):
+        machine = Machine(verbose=False)
+        machine.registers['c'] = 1
+
+        for line in self.input:
+            machine.instructions.append(line.strip())
+
+        while True:
+            try:
+                machine.process_current()
+            except StopIteration:
+                break
+
+        return machine.registers['a']
 
 
 if __name__ == '__main__':
-    Project().run()
+    with open('input.txt', 'r') as f:
+        p = Project(f)
+        print "Part 1:", p.run1()
+        f.seek(0)
+        print "Part 2:", p.run2()

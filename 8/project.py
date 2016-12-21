@@ -2,6 +2,7 @@ import sys
 import re
 import json
 
+
 class Project(object):
     def __init__(self, height, width):
         self.width = width
@@ -9,14 +10,13 @@ class Project(object):
         self.init_diagram(width, height)
 
     def init_diagram(self, width, height):
-        self.diagram = [[ '.' for __ in range(width) ] for _ in range(height)]
+        self.diagram = [['.' for __ in range(width)] for _ in range(height)]
 
     def run(self, ):
         for line in sys.stdin:
 
             instruction = self.get_line(line)
             instruction[0](self, *instruction[1:])
-
 
         total = 0
         for row in self.diagram:
@@ -39,7 +39,7 @@ class Project(object):
 
             return (func, int(match.group(3)), int(match.group(4)))
 
-        raise ValueError("Unexpected line: '%s'" % line )
+        raise ValueError("Unexpected line: '%s'" % line)
 
     def rotate_column(self, column, by):
         new = [[] for _ in range(self.height)]
@@ -48,7 +48,6 @@ class Project(object):
 
         for i, elem in enumerate(new):
             self.diagram[i][column] = elem
-
 
     def rotate_row(self, row, by):
         new = [[] for _ in range(self.width)]
@@ -73,8 +72,6 @@ def print_array(array):
 
 
 if __name__ == '__main__':
-    try:
-        p = Project(6, 50)
-        p.run()
-    finally:
-        print_array(p.diagram)
+    p = Project(6, 50)
+    p.run()
+    print_array(p.diagram)

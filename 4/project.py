@@ -1,24 +1,25 @@
-import sys
+import string
+
 
 class Project(object):
-    LETTERS = ['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o',
-               'p','q','r','s','t','u','v','w','x','y','z']
-    def __init__(self, ):
-        pass
+    LETTERS = list(string.ascii_lowercase)
 
     def run1(self, ):
         total = 0
-        for line in sys.stdin:
-            parts = self.get_tuple(line)
-            if self.checksum(parts[1]) == parts[2]:
-                total += int(parts[0])
-        print total
+        with open('input.txt', 'r') as lines:
+            for line in lines:
+                parts = self.get_tuple(line)
+                if self.checksum(parts[1]) == parts[2]:
+                    total += int(parts[0])
+        return total
 
     def run2(self, ):
-        for line in sys.stdin:
-            parts = self.get_tuple(line)
-            print(self.apply_cipher(parts), parts[0])
-
+        with open('input.txt', 'r') as lines:
+            for line in lines:
+                parts = self.get_tuple(line)
+                result = self.apply_cipher(parts)
+                if result == 'northpole object storage':
+                    return parts[0]
 
     def apply_cipher(self, parts):
         output = ''
@@ -54,9 +55,7 @@ class Project(object):
         return ''.join(map(lambda x: x[0], most_common))
 
 
-
-
-
-
 if __name__ == '__main__':
-    Project().run2()
+    p = Project()
+    print "Part 1:", p.run1()
+    print "Part 2:", p.run2()

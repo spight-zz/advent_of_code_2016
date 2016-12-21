@@ -1,24 +1,21 @@
 import sys
 import re
 
+
 class Project(object):
-    def __init__(self, ):
-        pass
+    def __init__(self, fh):
+        self.input = fh
 
     def run1(self, ):
         total = 0
         valid = 0
-        for line in sys.stdin:
+        for line in self.input:
             total += 1
             line = line.strip()
             if self.check_line1(line):
                 valid += 1
-                print("Works: %s" % line)
-            else:
-                print("Fuck: %s" % line)
 
-        print total, valid
-
+        return valid
 
     def check_line1(self, line):
         nets, hypernets = self.extract(line)
@@ -32,13 +29,12 @@ class Project(object):
     def run2(self):
         total = 0
         valid = 0
-        for line in sys.stdin:
+        for line in self.input:
             total += 1
             line = line.strip()
             if self.check_line2(line):
                 valid += 1
-        print total, valid
-
+        return valid
 
     def check_line2(self, line):
         nets, hypernets = self.extract(line)
@@ -65,8 +61,9 @@ class Project(object):
         hypernets = []
 
         line = str(line)  # Copy line for manipulation
+        pattern = re.compile(r'([a-z]+)(\[([a-z]+)\])?(.*)$')
         while True:
-            section, _, hypernet, line = re.match(r'([a-z]+)(\[([a-z]+)\])?(.*)$', line).groups()
+            section, _, hypernet, line = pattern.match(line).groups()
             ip_sections.append(section)
             if hypernet is None:
                 break
@@ -84,7 +81,6 @@ class Project(object):
 
         return matches
 
-
     def is_abba(self, net):
         """Check whether a net is ABBA or not"""
         for match in re.finditer('(?=((\w)(\w)\\3\\2))', net):
@@ -93,7 +89,11 @@ class Project(object):
         return False
 
 
-
-
 if __name__ == '__main__':
-    Project().run2()
+    with open('input.txt', 'r') as f:
+
+        p = Project(f)
+        print "Part 1:", p.run1()
+        f.seek(0)
+        print "Part 2:", p.run2()
+        f.close()

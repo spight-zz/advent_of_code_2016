@@ -1,14 +1,15 @@
 import sys
 import operator
 
+
 class Project(object):
-    def __init__(self, ):
-        pass
+    def __init__(self, fh):
+        self.input = fh
 
     def run1(self, ):
         counts = [{}, {}, {}, {}, {}, {}, {}, {}]
         output = ""
-        for line in sys.stdin:
+        for line in self.input:
             for i, c in enumerate(line.strip()):
                 if c in counts[i]:
                     counts[i][c] += 1
@@ -18,12 +19,12 @@ class Project(object):
         for count_dict in counts:
             output += self.most_common(count_dict)[0]
 
-        print output
+        return output
 
     def run2(self, ):
         counts = [{}, {}, {}, {}, {}, {}, {}, {}]
         output = ""
-        for line in sys.stdin:
+        for line in self.input:
             for i, c in enumerate(line.strip()):
                 if c in counts[i]:
                     counts[i][c] += 1
@@ -33,8 +34,7 @@ class Project(object):
         for count_dict in counts:
             output += self.least_common(count_dict)[0]
 
-        print output
-
+        return output
 
     def to_idx(self, letter):
         return ord(letter.lower()) - 97
@@ -46,5 +46,9 @@ class Project(object):
         return sorted(count_dict.items(), key=operator.itemgetter(1))[-1]
 
 if __name__ == '__main__':
-    # Project().run1()
-    Project().run2()
+    with open('input.txt', 'r') as f:
+        p = Project(f)
+        print "Part 1:", p.run1()
+        f.seek(0)
+        print "Part 2:", p.run2()
+        f.close()

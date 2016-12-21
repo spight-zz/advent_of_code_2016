@@ -1,9 +1,11 @@
 import sys
-import itertools
+from itertools import combinations
 from Queue import Queue
+
 
 class RTGFry(Exception):
     pass
+
 
 class State(object):
     def __init__(self, num_floors=2, distance=None, parent=None):
@@ -56,7 +58,7 @@ class State(object):
             num_objects = len(self.current_floor)
 
         while num_objects > 0:
-            for pair in itertools.combinations(self.current_floor, num_objects):
+            for pair in combinations(self.current_floor, num_objects):
                 for direction in directions:
                     yield direction, pair
             num_objects -= 1
@@ -77,7 +79,6 @@ class State(object):
         if len(pair) == 2:
             self.add(pair[1])
 
-
     def is_complete(self, ):
         for i, floor in enumerate(self.floors):
             if len(floor) > 0 and i != len(self.floors) - 1:
@@ -90,7 +91,7 @@ class State(object):
                 continue
             for item in floor:
                 if item.type == 'chip' and \
-                    not any_match(floor, 'rtg', item.element):
+                        not any_match(floor, 'rtg', item.element):
                     return False
         return True
 
@@ -106,6 +107,7 @@ class State(object):
 
         return "".join(reversed(output))
 
+
 class Item(object):
     def __init__(self, element):
         self.element = element
@@ -119,15 +121,18 @@ class Item(object):
             short_type = 'M'
         return '%s%s' % (self.element, short_type)
 
+
 class Chip(Item):
     def __init__(self, element):
         self.element = element
         self.type = 'chip'
 
+
 class RTG(Item):
     def __init__(self, element):
         self.element = element
         self.type = 'rtg'
+
 
 class Project(object):
     def __init__(self, ):
@@ -144,27 +149,7 @@ class Project(object):
         root.add(hg, 2)
         root.add(lg, 3)
 
-        # print(root)
-
         result = find_nearest_correct(root)
-        print(result)
-        print(result.distance)
-
-
-    def run1(self):
-        p = State(4, distance=0)
-        p.add(RTG("strontium"), 1)
-        p.add(Chip("strontium"), 1)
-        p.add(RTG("plutonium"), 1)
-        p.add(Chip("plutonium"), 1)
-        p.add(RTG("thulium"), 2)
-        p.add(RTG("ruthenium"), 2)
-        p.add(Chip("ruthenium"), 2)
-        p.add(RTG("curium"), 2)
-        p.add(Chip("curium"), 2)
-        p.add(Chip("thulium"), 3)
-
-        result = find_nearest_correct(p)
         print(result)
         print(result.distance)
 
@@ -206,11 +191,14 @@ class Project(object):
         print(result)
         print(result.distance)
 
+
 def any_rtg(iterable):
     return _any(iterable, lambda x: x.type == 'rtg')
 
+
 def any_match(iterable, type_, element):
     return _any(iterable, lambda x: x.type == type_ and x.element == element)
+
 
 def _any(iterable, func):
     for element in iterable:
@@ -235,12 +223,9 @@ def find_nearest_correct(root, max_distance=1000):
             return False
 
         if state.is_complete():
-            # All objects are on the final floor
-            print("Looks right to me vov")
             return state
 
         if state.is_valid():
-            # print("It's valid at least.")
             for move in state.itermoves():
                 new_state = state.clone()
                 new_state.move(*move)
@@ -248,19 +233,11 @@ def find_nearest_correct(root, max_distance=1000):
                 new_state.distance = state.distance + 1
 
                 if new_state.is_valid():
-                    if new_state.serialize() in seen:
-                        pass
-                    else:
+                    if new_state.serialize() not in seen:
                         seen[new_state.serialize()] = new_state
                         queue.put(new_state)
-                else:
-                    pass
-                    # print("INVALID")
-
-        else:
-            pass
-            # print("it's not valid :()")
 
 
 if __name__ == '__main__':
+    Project().run1()
     Project().run2()

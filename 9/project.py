@@ -1,9 +1,10 @@
 import sys
 import re
 
+
 class Project(object):
-    def __init__(self, ):
-        self.input = sys.stdin.read()
+    def __init__(self, data):
+        self.input = data
         self.compression_pattern = re.compile('(\((\d+)x(\d+)\))')
 
     def run1(self, ):
@@ -16,7 +17,7 @@ class Project(object):
             except StopIteration:
                 break
 
-        print len(''.join(self.output.split()))
+        return len(''.join(self.output.split()))
 
     def find_next_decompression(self):
         match = self.compression_pattern.search(self.input, self.pos)
@@ -36,7 +37,7 @@ class Project(object):
             raise StopIteration()
 
     def run2(self,):
-        print self.calculate_expansion(self.input) - 1  # newline...
+        return self.calculate_expansion(self.input) - 1  # -1 for newline. lol
 
     def calculate_expansion(self, line):
         total = 0
@@ -44,10 +45,12 @@ class Project(object):
         while cur_pos < len(line):
             match = self.compression_pattern.search(line, cur_pos)
             if match:
-                total += match.start() - cur_pos  # No compression until matched location
+                # No compression until we match a location
+                total += match.start() - cur_pos
                 expand_pos = match.start() + len(match.group(1))
                 expand_line = line[expand_pos:expand_pos + int(match.group(2))]
-                total += self.calculate_expansion(expand_line) * int(match.group(3))
+                expanded_size = self.calculate_expansion(expand_line)
+                total += expanded_size * int(match.group(3))
                 cur_pos = expand_pos + int(match.group(2))
             else:
                 total += len(line[cur_pos:])
@@ -56,6 +59,7 @@ class Project(object):
 
 
 if __name__ == '__main__':
-    p = Project()
-    p.run1()
-    p.run2()
+    with open('input.txt', 'r') as f:
+        p = Project(f.read())
+        print "Part 1:", p.run1()
+        print "Part 2:", p.run2()
