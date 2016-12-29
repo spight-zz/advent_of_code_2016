@@ -20,8 +20,19 @@ class State(object):
 
     def serialize(self):
         output = []
+        pair_num = 0
+        pair_map = {}
         for floor in self.floors:
-            output.append(sorted(floor))
+            devices = []
+            for device in floor:
+                if device.element not in pair_map:
+                    pair_map[device.element] = pair_num
+                    pair_num += 1
+
+                devices.append(str(pair_map[device.element]) + device.type)
+
+            output.append(sorted(devices))
+
         return str(output) + ":elevator=" + str(self.elevator)
 
     def clone(self):
