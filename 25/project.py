@@ -19,7 +19,6 @@ class Machine(object):
             cmd = self.instructions[self.current]
         except IndexError:
             return False
-        # print cmd
         output = self._process_cmd(cmd)
         self.current += 1
         return output
@@ -35,7 +34,6 @@ class Machine(object):
         x = self.get_int(x)
 
         if y not in self.registers:
-            print "Hyep'"
             return False
 
         self.registers[y] = x
@@ -127,7 +125,6 @@ class Project(object):
             switch = (switch + 1) % 2
 
         return switch == 0
-
 
     def run1(self):
         machine = Machine(False)
